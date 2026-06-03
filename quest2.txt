@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Diet & Macro Companion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <nav class="bg-emerald-600 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="text-2xl font-bold tracking-wide">🥗 NutriTrack</h1>
+        <div id="nav-user" class="flex items-center gap-4">
+            <span id="streak-badge" class="bg-orange-500 text-xs font-bold px-2 py-1 rounded-full">🔥 Streak: 0 days</span>
+            <button onclick="logout()" class="bg-emerald-700 hover:bg-emerald-800 text-sm px-3 py-1.5 rounded transition">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
+
+        <section id="auth-section" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-xl mt-12">
+            <h2 class="text-xl font-bold mb-4 text-center">Welcome to NutriTrack</h2>
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Name</label>
+                    <input type="text" id="username" required class="w-full border border-slate-300 p-2 rounded-lg focus:outline-emerald-500" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Target Calories</label>
+                    <input type="number" id="target-cal" value="2000" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Target Protein (g)</label>
+                    <input type="number" id="target-prot" value="150" class="w-full border border-slate-300 p-2 rounded-lg focus:outline-emerald-500">
+                </div>
+                <div class="flex items-start gap-2 pt-2">
+                    <input type="checkbox" id="agree-terms" required class="mt-1 accent-emerald-600">
+                    <label for="agree-terms" class="text-xs text-slate-500">
+                        I agree to the <a href="#legal" onclick="toggleModal('legal-modal')" class="text-emerald-600 underline">Terms & Conditions</a> and <a href="#legal" onclick="toggleModal('legal-modal')" class="text-emerald-600 underline">Privacy Policy</a>.
+                    </label>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-lg transition shadow">Enter Dashboard</button>
+            </form>
+        </section>
+
+        <div id="dashboard" class="hidden space-y-8">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Hello, <span id="user-display-name">User</span>!</h2>
+                    <p class="text-slate-500 text-sm">Here is your nutritional summary for today.</p>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl flex items-center gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <p class="text-xs text-slate-500 font-bold uppercase">Daily Streak</p>
+                        <p id="streak-count" class="text-lg font-extrabold text-emerald-700">1 Day</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="md:col-span-2 space-y-6">
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                            <h3 class="font-bold text-amber-800 mb-2 flex justify-between">
+                                <span>🔥 Calories</span>
+                                <span id="cal-ratio" class="text-sm font-normal text-slate-600">0 / 2000 kcal</span>
+                            </h3>
+                            <div class="w-full bg-amber-200 h-3 rounded-full overflow-hidden mb-4">
+                                <div id="cal-progress" class="bg-amber-500 h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="number" id="add-cal-val" placeholder="kcal" class="w-24 bg-white border border-slate-300 px-2 py-1 text-sm rounded-md">
+                                <button onclick="addMacro('cal')" class="bg-amber-600 text-white px-3 py-1 text-sm rounded-md font-medium hover:bg-amber-700">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                            <h3 class="font-bold text-blue-800 mb-2 flex justify-between">
+                                <span>💪 Protein</span>
+                                <span id="prot-ratio" class="text-sm font-normal text-slate-600">0 / 150 g</span>
+                            </h3>
+                            <div class="w-full bg-blue-200 h-3 rounded-full overflow-hidden mb-4">
+                                <div id="prot-progress" class="bg-blue-500 h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="number" id="add-prot-val" placeholder="grams" class="w-24 bg-white border border-slate-300 px-2 py-1 text-sm rounded-md">
+                                <button onclick="addMacro('prot')" class="bg-blue-600 text-white px-3 py-1 text-sm rounded-md font-medium hover:bg-blue-700">Add</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <h3 class="text-lg font-bold mb-3 flex items-center gap-2">✅ Daily Quests</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-lg cursor-pointer">
+                                <input type="checkbox" onchange="toggleTask()" class="w-4 h-4 accent-emerald-600">
+                                <span class="text-sm">Drink 3 Liters of Water</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-lg cursor-pointer">
+                                <input type="checkbox" onchange="toggleTask()" class="w-4 h-4 accent-emerald-600">
+                                <span class="text-sm">Hit your Protein Target</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-lg cursor-pointer">
+                                <input type="checkbox" onchange="toggleTask()" class="w-4 h-4 accent-emerald-600">
+                                <span class="text-sm">Log everything you eat today</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                        <h3 class="text-lg font-bold mb-3">🧮 BMI Calculator</h3>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="bmi-weight" placeholder="Weight (kg)" class="border border-slate-300 p-2 text-sm rounded-lg w-full">
+                                <input type="number" id="bmi-height" placeholder="Height (cm)" class="border border-slate-300 p-2 text-sm rounded-lg w-full">
+                            </div>
+                            <button onclick="calculateBMI()" class="w-full bg-slate-800 text-white text-sm font-medium py-2 rounded-lg hover:bg-slate-900 transition">Calculate</button>
+                            <div id="bmi-result" class="hidden text-center p-2.5 rounded-lg text-sm font-semibold"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+                        <h3 class="text-lg font-bold mb-2 text-left">⏱️ Interval Timer</h3>
+                        <div id="timer-display" class="text-3xl font-mono font-bold my-3 text-slate-700">05:00</div>
+                        <div class="flex justify-center gap-2">
+                            <button onclick="startTimer()" class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded hover:bg-emerald-700">Start</button>
+                            <button onclick="pauseTimer()" class="bg-amber-500 text-white text-xs px-3 py-1.5 rounded hover:bg-amber-600">Pause</button>
+                            <button onclick="resetTimer()" class="bg-slate-300 text-slate-700 text-xs px-3 py-1.5 rounded hover:bg-slate-400">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex justify-center overflow-hidden">
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8137560956622397"
+                     crossorigin="anonymous"></script>
+                <ins class="adsbygoogle"
+                     style="display:block; min-width:250px; min-height:90px;"
+                     data-ad-format="fluid"
+                     data-ad-layout-key="-ef+6k-30-ac+ty"
+                     data-ad-client="ca-pub-8137560956622397"
+                     data-ad-slot="4657557198"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-xl font-bold mb-4">🍽️ Meal Ideas Tailored for Your Goals</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border border-amber-100 bg-amber-50/20 p-4 rounded-xl">
+                        <h4 class="font-bold text-amber-900 mb-3 flex items-center gap-2">🥑 High-Calorie (Bulk Up)</h4>
+                        <ul class="space-y-2 text-sm text-slate-700">
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Peanut Butter Smoothie:</strong> Oats, whole milk, 2 tbsp peanut butter, 1 banana (~650 kcal)</li>
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Trail Mix Medley:</strong> Almonds, walnuts, raisins, and dark chocolate chips (~450 kcal per cup)</li>
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Avocado Salmon Rice:</strong> Fatty salmon fillet with one whole avocado over jasmine rice (~700 kcal)</li>
+                        </ul>
+                    </div>
+                    <div class="border border-blue-100 bg-blue-50/20 p-4 rounded-xl">
+                        <h4 class="font-bold text-blue-900 mb-3 flex items-center gap-2">🍗 High-Protein (Lean Muscle)</h4>
+                        <ul class="space-y-2 text-sm text-slate-700">
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Grilled Chicken Breast:</strong> 200g of skinless chicken breast (~62g protein)</li>
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Greek Yogurt Bowl:</strong> 1 cup low-fat Greek yogurt with scoop of whey protein (~35g protein)</li>
+                            <li class="bg-white p-2 rounded shadow-xs"><strong>Egg White & Cottage Cheese Scramble:</strong> 3 egg whites, 1 whole egg, 1/2 cup cottage cheese (~30g protein)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="legal-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4">Legal Agreements</h3>
+            <div class="space-y-4 text-xs text-slate-600">
+                <h4 class="font-bold text-slate-800 text-sm">Terms & Conditions</h4>
+                <p>By entering this app, you accept that the information generated here is for informational tracking and does not constitute official professional medical advice.</p>
+                <h4 class="font-bold text-slate-800 text-sm">Privacy Policy</h4>
+                <p>We take user data privacy seriously. All data calculated and saved inside this application template stays completely within your local browser storage cache and is never broadcast to an external system.</p>
+            </div>
+            <button onclick="toggleModal('legal-modal')" class="mt-6 w-full bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold py-2 rounded-lg transition">Close Window</button>
+        </div>
+    </div>
+
+    <script>
+        let user = JSON.parse(localStorage.getItem('diet_user')) || null;
+        let macros = JSON.parse(localStorage.getItem('diet_macros')) || { cal: 0, prot: 0 };
+        let timerInterval;
+        let timeLeft = 300; 
+
+        window.onload = function() {
+            if (user) { showDashboard(); }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            user = {
+                name: document.getElementById('username').value,
+                targetCal: parseInt(document.getElementById('target-cal').value),
+                targetProt: parseInt(document.getElementById('target-prot').value),
+                streak: 1
+            };
+            localStorage.setItem('diet_user', JSON.stringify(user));
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            
+            document.getElementById('user-display-name').innerText = user.name;
+            document.getElementById('streak-badge').innerText = `🔥 Streak: ${user.streak} days`;
+            document.getElementById('streak-count').innerText = `${user.streak} Day${user.streak > 1 ? 's' : ''}`;
+            updateMacroUI();
+        }
+
+        function logout() {
+            localStorage.clear();
+            user = null;
+            macros = { cal: 0, prot: 0 };
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('nav-user').classList.add('hidden');
+            resetTimer();
+        }
+
+        function addMacro(type) {
+            const valInput = document.getElementById(`add-${type}-val`);
+            const value = parseInt(valInput.value) || 0;
+            if (value > 0) {
+                macros[type] += value;
+                localStorage.setItem('diet_macros', JSON.stringify(macros));
+                updateMacroUI();
+                valInput.value = '';
+            }
+        }
+
+        function updateMacroUI() {
+            document.getElementById('cal-ratio').innerText = `${macros.cal} / ${user.targetCal} kcal`;
+            document.getElementById('prot-ratio').innerText = `${macros.prot} / ${user.targetProt} g`;
+            
+            const calPct = Math.min((macros.cal / user.targetCal) * 100, 100);
+            const protPct = Math.min((macros.prot / user.targetProt) * 100, 100);
+            
+            document.getElementById('cal-progress').style.width = `${calPct}%`;
+            document.getElementById('prot-progress').style.width = `${protPct}%`;
+        }
+
+        function toggleTask() {}
+
+        function calculateBMI() {
+            const w = parseFloat(document.getElementById('bmi-weight').value);
+            const h = parseFloat(document.getElementById('bmi-height').value) / 100; 
+            const box = document.getElementById('bmi-result');
+
+            if (w > 0 && h > 0) {
+                const bmi = (w / (h * h)).toFixed(1);
+                box.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-800', 'bg-amber-100', 'text-amber-800', 'bg-rose-100', 'text-rose-800');
+                
+                let category = "Normal";
+                let style = "bg-emerald-100 text-emerald-800";
+                
+                if (bmi < 18.5) { category = "Underweight"; style = "bg-amber-100 text-amber-800"; }
+                else if (bmi >= 25 && bmi < 30) { category = "Overweight"; style = "bg-amber-100 text-amber-800"; }
+                else if (bmi >= 30) { category = "Obese"; style = "bg-rose-100 text-rose-800"; }
+                
+                box.className = `text-center p-2.5 rounded-lg text-sm font-semibold ${style}`;
+                box.innerText = `Your BMI is ${bmi} (${category})`;
+            }
+        }
+
+        function updateTimerUI() {
+            const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const secs = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${mins}:${secs}`;
+        }
+
+        function startTimer() {
+            if (!timerInterval) {
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerUI();
+                    } else {
+                        clearInterval(timerInterval);
+                        alert("Time is up!");
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = 300;
+            updateTimerUI();
+        }
+
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
